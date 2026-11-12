@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pokédex Digital Web</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* =========================================
+       RESET E VARIÁVEIS GLOBAIS
+    ========================================= */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --pokedex-red: #dc0a2d;
+      --pokedex-dark-red: #9e0620;
+      --pokedex-border: #7a0317;
+      --screen-bg: #f8fafc;
+      --accent-type: #3b82f6;
+      --accent-type-soft: #eff6ff;
+    }
+
+    body {
+      font-family: 'Poppins', 'Segoe UI', sans-serif;
+      background: radial-gradient(circle at top, #1e293b 0%, #0f172a 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px 14px;
+      color: #1e293b;
+    }
+
+    /* =========================================
+       CARCAÇA PRINCIPAL DA POKÉDEX
+    ========================================= */
+    .pokedex-container {
+      background: linear-gradient(160deg, #e61538 0%, var(--pokedex-red) 55%, var(--pokedex-dark-red) 100%);
+      width: 100%;
+      max-width: 440px;
+      border-radius: 28px;
+      padding: 24px 22px 26px;
+      box-shadow:
+        0 25px 50px rgba(0, 0, 0, 0.55),
+        inset 0 3px 6px rgba(255, 255, 255, 0.35),
+        inset 0 -6px 12px rgba(0, 0, 0, 0.35);
+      border: 3px solid var(--pokedex-border);
+      position: relative;
+    }
+
+    /* =========================================
+       TOPO: LENTE AZUL E LEDS INDICADORES
+    ========================================= */
+    .pokedex-hardware-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding-bottom: 16px;
+      margin-bottom: 16px;
+      border-bottom: 3px solid rgba(122, 3, 23, 0.55);
+    }
+
+    .camera-lens {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 32% 30%, #bae6fd 0%, #38bdf8 35%, #0284c7 75%, #0369a1 100%);
+      border: 4px solid #f8fafc;
+      box-shadow:
+        0 0 0 3px #1e293b,
+        0 6px 14px rgba(0, 0, 0, 0.4),
+        inset 0 -4px 8px rgba(0, 0, 0, 0.3);
+      position: relative;
+      flex-shrink: 0;
+      transition: box-shadow 0.3s ease;
+    }
+
+    .camera-lens::after {
+      content: "";
+      position: absolute;
+      top: 9px;
+      left: 11px;
+      width: 13px;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.75);
+      border-radius: 50%;
+      transform: rotate(-28deg);
+    }
+
+    .camera-lens.pulse {
+      animation: lensPulse 0.85s infinite alternate;
+    }
+
+    @keyframes lensPulse {
+      from {
+        box-shadow:
+          0 0 0 3px #1e293b,
+          0 0 10px #38bdf8,
+          0 0 20px #38bdf8;
+      }
+      to {
+        box-shadow:
+          0 0 0 3px #1e293b,
+          0 0 22px #7dd3fc,
+          0 0 38px #0ea5e9;
+      }
+    }
+
+    .status-leds {
+      display: flex;
+      gap: 8px;
+      padding-top: 4px;
+    }
+
+    .led {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid rgba(15, 23, 42, 0.75);
+      box-shadow: inset 0 2px 3px rgba(255, 255, 255, 0.65);
+    }
+
+    .led.red { background-color: #ef4444; }
+    .led.yellow { background-color: #facc15; }
+    .led.green { background-color: #22c55e; }
+
+    .header-title {
+      margin-left: auto;
+      text-align: right;
+    }
+
+    .header-title h1 {
+      font-family: 'Orbitron', sans-serif;
+      color: #ffffff;
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
+    }
+
+    .header-title p {
+      color: #ffe4e6;
+      font-size: 11px;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    /* =========================================
+       ÁREA DE BUSCA E ATALHOS RÁPIDOS
+    ========================================= */
+    .search-area {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .search-area input {
+      flex: 1;
+      min-width: 0;
+      padding: 11px 14px;
+      border: 2px solid #1e293b;
+      border-radius: 12px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      background-color: #ffffff;
+      color: #0f172a;
+      outline: none;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .search-area input:focus {
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.35);
+    }
+
+    .btn-primary,
+    .btn-random {
+      border: 2px solid #0f172a;
+      border-radius: 12px;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: transform 0.15s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 3px 0 #0f172a;
+    }
+
+    .btn-primary {
+      background-color: #1e293b;
+      color: #ffffff;
+      padding: 0 16px;
+    }
+
+    .btn-primary:hover {
+      background-color: #334155;
+    }
+
+    .btn-random {
+      background-color: #facc15;
+      color: #0f172a;
+      padding: 0 12px;
+      font-size: 17px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-random:hover {
+      background-color: #fde047;
+    }
+
+    .btn-primary:active,
+    .btn-random:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #0f172a;
+    }
+
+    .quick-picks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    .quick-btn {
+      background: rgba(15, 23, 42, 0.28);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 11.5px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .quick-btn:hover {
+      background: #ffffff;
+      color: var(--pokedex-red);
+      border-color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    /* =========================================
+       MOLDURA DO VISOR DIGITAL
+    ========================================= */
+    .screen-bezel {
+      background-color: #e2e8f0;
+      border-radius: 20px 20px 20px 44px;
+      padding: 14px;
+      border: 3px solid #1e293b;
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    .screen-dots {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .screen-dots span {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #dc0a2d;
+      border: 1px solid #7a0317;
+    }
+
+    .screen-display {
+      background-color: var(--screen-bg);
+      border-radius: 14px;
+      border: 2px solid #94a3b8;
+      min-height: 360px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .oculto {
+      display: none !important;
+    }
+
+    /* Estado Inicial */
+    .empty-state {
+      padding: 32px 20px;
+      text-align: center;
+      color: #64748b;
+    }
+
+    .pokeball-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 14px;
+      border-radius: 50%;
+      background: linear-gradient(to bottom, #ef4444 0%, #ef4444 46%, #1e293b 46%, #1e293b 54%, #ffffff 54%, #ffffff 100%);
+      border: 3px solid #1e293b;
+      position: relative;
+      opacity: 0.85;
+    }
+
+    .pokeball-icon::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 3px solid #1e293b;
+    }
+
+    .empty-state p {
+      font-size: 13.5px;
+      line-height: 1.5;
+    }
+
+    /* Mensagem de Carregamento / Erro */
+    .status-box {
+      padding: 36px 20px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 14.5px;
+      color: #334155;
+    }
+
+    .status-box.erro {
+      color: #dc2626;
+    }
+
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 4px solid #cbd5e1;
+      border-top-color: var(--pokedex-red);
+      border-radius: 50%;
+      margin: 0 auto 12px;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* =========================================
+       CARTÃO DO POKÉMON (DINÂMICO POR TIPO)
+    ========================================= */
+    .pokemon-card {
+      animation: fadeIn 0.35s ease-out;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px) scale(0.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .card-hero {
+      background: linear-gradient(135deg, var(--accent-type) 0%, color-mix(in srgb, var(--accent-type) 72%, #0f172a) 100%);
+      padding: 16px 18px 22px;
+      text-align: center;
+      position: relative;
+      border-bottom-left-radius: 26px;
+      border-bottom-right-radius: 26px;
+      color: #ffffff;
+      transition: background 0.35s ease;
+    }
+
+    .card-top-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .badge-number {
+      font-family: 'Orbitron', sans-serif;
+      background: rgba(15, 23, 42, 0.35);
+      color: #ffffff;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+    }
+
+    .types-container {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .type-pill {
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.24);
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      backdrop-filter: blur(4px);
+    }
+
+    .sprite-wrapper {
+      width: 146px;
+      height: 146px;
+      margin: 4px auto 8px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.08) 70%, transparent 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .sprite-wrapper img {
+      width: 136px;
+      height: 136px;
+      object-fit: contain;
+      filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.35));
+      transition: transform 0.25s ease;
+    }
+
+    .sprite-wrapper img:hover {
+      transform: scale(1.07);
+    }
+
+    .pokemon-name {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      text-transform: capitalize;
+      letter-spacing: 0.6px;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.28);
+    }
+
+    /* Corpo de Detalhes */
+    .card-body {
+      padding: 16px 18px 18px;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .metric-box {
+      background-color: var(--accent-type-soft);
+      border: 1px solid color-mix(in srgb, var(--accent-type) 25%, #cbd5e1);
+      border-radius: 12px;
+      padding: 8px 12px;
+      text-align: center;
+    }
+
+    .metric-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: #64748b;
+      letter-spacing: 0.5px;
+    }
+
+    .metric-value {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 2px;
+      display: block;
+    }
+
+    /* Barras de Status Base */
+    .stats-title {
+      font-size: 11.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #475569;
+      margin-bottom: 8px;
+    }
+
+    .stat-row {
+      display: grid;
+      grid-template-columns: 74px 34px 1fr;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 7px;
+      font-size: 12px;
+    }
+
+    .stat-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .stat-name {
+      font-weight: 600;
+      color: #334155;
+    }
+
+    .stat-num {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      font-size: 11.5px;
+      color: #0f172a;
+      text-align: right;
+    }
+
+    .stat-bar-bg {
+      height: 8px;
+      background-color: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .stat-bar-fill {
+      height: 100%;
+      background-color: var(--accent-type);
+      border-radius: 999px;
+      width: 0%;
+      transition: width 0.55s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.3s ease;
+    }
+
+    /* =========================================
+       CONTROLES DE NAVEGAÇÃO INFERIOR
+    ========================================= */
+    .nav-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .btn-nav {
+      flex: 1;
+      background-color: #1e293b;
+      color: #ffffff;
+      border: 2px solid #0f172a;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 3px 0 #0f172a;
+      transition: all 0.15s ease;
+    }
+
+    .btn-nav:hover:not(:disabled) {
+      background-color: #334155;
+    }
+
+    .btn-nav:active:not(:disabled) {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #0f172a;
+    }
+
+    .btn-nav:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    @media (max-width: 400px) {
+      .pokedex-container {
+        padding: 18px 14px 20px;
+      }
+      .header-title h1 {
+        font-size: 16px;
+      }
+      .sprite-wrapper {
+        width: 126px;
+        height: 126px;
+      }
+      .sprite-wrapper img {
+        width: 118px;
+        height: 118px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <main class="pokedex-container">
+    <!-- Topo da Pokédex: Lente Azul + LEDs + Título -->
+    <header class="pokedex-hardware-top">
+      <div id="cameraLens" class="camera-lens" title="Sensor PokéAPI"></div>
+      <div class="status-leds" aria-hidden="true">
+        <span class="led red"></span>
+        <span class="led yellow"></span>
+        <span class="led green"></span>
+      </div>
+      <div class="header-title">
+        <h1>POKÉDEX</h1>
+        <p>Busca via PokéAPI</p>
+      </div>
+    </header>
+
+    <!-- Área de Busca -->
+    <section class="search-area" aria-label="Buscar Pokémon">
+      <input
+        type="text"
+        id="inputPokemon"
+        placeholder="Nome ou nº (ex: pikachu, 25)"
+        autocomplete="off"
+      >
+      <button type="button" class="btn-primary" onclick="buscarPokemon()">Buscar</button>
+      <button type="button" class="btn-random" onclick="buscarAleatorio()" title="Pokémon Aleatório">🎲</button>
+    </section>
+
+    <!-- Acesso Rápido -->
+    <nav class="quick-picks" aria-label="Sugestões rápidas">
+      <button type="button" class="quick-btn" onclick="selecionarRapido('pikachu')">Pikachu</button>
+      <button type="button" class="quick-btn" onclick="selecionarRapido('charizard')">Charizard</button>
+      <button type="button" class="quick-btn" onclick="selecionarRapido('bulbasaur')">Bulbasaur</button>
+      <button type="button" class="quick-btn" onclick="selecionarRapido('gengar')">Gengar</button>
+      <button type="button" class="quick-btn" onclick="selecionarRapido('mewtwo')">Mewtwo</button>
+    </nav>
+
+    <!-- Moldura do Visor -->
+    <div class="screen-bezel">
+      <div class="screen-dots" aria-hidden="true">
+        <span></span>
+        <span></span>
+      </div>
+
+      <div class="screen-display">
+        <!-- Tela Inicial -->
+        <div id="estadoInicial" class="empty-state">
+          <div class="pokeball-icon"></div>
+          <p>Digite o <strong>nome</strong> ou <strong>número</strong> de um Pokémon acima, ou clique em <strong>🎲</strong> para sortear.</p>
+        </div>
+
+        <!-- Mensagem de Carregamento / Erro -->
+        <div id="mensagemStatus" class="status-box oculto">
+          <div id="loadingSpinner" class="spinner"></div>
+          <p id="textoStatus">Buscando na internet...</p>
+        </div>
+
+        <!-- Cartão do Resultado -->
+        <section id="cardPokemon" class="pokemon-card oculto" aria-live="polite">
+          <div class="card-hero">
+            <div class="card-top-meta">
+              <span id="numeroPokemon" class="badge-number">#000</span>
+              <div id="tiposContainer" class="types-container"></div>
+            </div>
+
+            <div class="sprite-wrapper">
+              <img id="imagemPokemon" src="" alt="Imagem oficial do Pokémon">
+            </div>
+
+            <h2 id="nomePokemon" class="pokemon-name">Nome</h2>
+          </div>
+
+          <div class="card-body">
+            <div class="metrics-grid">
+              <div class="metric-box">
+                <span class="metric-label">Peso</span>
+                <span class="metric-value"><span id="pesoPokemon">---</span> kg</span>
+              </div>
+              <div class="metric-box">
+                <span class="metric-label">Altura</span>
+                <span class="metric-value"><span id="alturaPokemon">---</span> m</span>
+              </div>
+            </div>
+
+            <h3 class="stats-title">Status Base</h3>
+            <div class="stats-list">
+              <div class="stat-row">
+                <span class="stat-name">HP</span>
+                <span id="statHpVal" class="stat-num">0</span>
+                <div class="stat-bar-bg"><div id="statHpBar" class="stat-bar-fill"></div></div>
+              </div>
+              <div class="stat-row">
+                <span class="stat-name">Ataque</span>
+                <span id="statAtkVal" class="stat-num">0</span>
+                <div class="stat-bar-bg"><div id="statAtkBar" class="stat-bar-fill"></div></div>
+              </div>
+              <div class="stat-row">
+                <span class="stat-name">Defesa</span>
+                <span id="statDefVal" class="stat-num">0</span>
+                <div class="stat-bar-bg"><div id="statDefBar" class="stat-bar-fill"></div></div>
+              </div>
+              <div class="stat-row">
+                <span class="stat-name">Velocidade</span>
+                <span id="statSpdVal" class="stat-num">0</span>
+                <div class="stat-bar-bg"><div id="statSpdBar" class="stat-bar-fill"></div></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- Navegação Anterior / Próximo -->
+    <footer class="nav-controls">
+      <button type="button" id="btnAnterior" class="btn-nav" onclick="navegarPokemon(-1)" disabled>⬅ Anterior</button>
+      <button type="button" id="btnProximo" class="btn-nav" onclick="navegarPokemon(1)" disabled>Próximo ➡</button>
+    </footer>
+  </main>
+
+  <script>
+    // Mapa de cores e traduções dos tipos Pokémon
+    const TIPOS_CONFIG = {
+      normal:   { nome: 'Normal',   cor: '#94a3b8', suave: '#f1f5f9' },
+      fire:     { nome: 'Fogo',     cor: '#f97316', suave: '#fff7ed' },
+      water:    { nome: 'Água',     cor: '#0ea5e9', suave: '#f0f9ff' },
+      electric: { nome: 'Elétrico', cor: '#eab308', suave: '#fefce8' },
+      grass:    { nome: 'Planta',   cor: '#22c55e', suave: '#f0fdf4' },
+      ice:      { nome: 'Gelo',     cor: '#06b6d4', suave: '#ecfeff' },
+      fighting: { nome: 'Lutador',  cor: '#dc2626', suave: '#fef2f2' },
+      poison:   { nome: 'Venenoso', cor: '#a855f7', suave: '#faf5ff' },
+      ground:   { nome: 'Terra',    cor: '#d97706', suave: '#fffbeb' },
+      flying:   { nome: 'Voador',   cor: '#6366f1', suave: '#eef2ff' },
+      psychic:  { nome: 'Psíquico', cor: '#ec4899', suave: '#fdf2f8' },
+      bug:      { nome: 'Inseto',   cor: '#84cc16', suave: '#f7fee7' },
+      rock:     { nome: 'Pedra',    cor: '#78716c', suave: '#f5f5f4' },
+      ghost:    { nome: 'Fantasma', cor: '#7e22ce', suave: '#f3e8ff' },
+      dragon:   { nome: 'Dragão',   cor: '#4f46e5', suave: '#eef2ff' },
+      dark:     { nome: 'Sombrio',  cor: '#334155', suave: '#f1f5f9' },
+      steel:    { nome: 'Aço',      cor: '#64748b', suave: '#f8fafc' },
+      fairy:    { nome: 'Fada',     cor: '#f472b6', suave: '#fdf2f8' }
+    };
+
+    let pokemonAtualId = null;
+    const MAX_POKEMON_ID = 1025;
+
+    // Permite buscar pressionando Enter no campo de texto
+    document.getElementById('inputPokemon').addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') {
+        buscarPokemon();
+      }
+    });
+
+    function selecionarRapido(nome) {
+      document.getElementById('inputPokemon').value = nome;
+      buscarPokemon();
+    }
+
+    function buscarAleatorio() {
+      const idAleatorio = Math.floor(Math.random() * MAX_POKEMON_ID) + 1;
+      document.getElementById('inputPokemon').value = idAleatorio;
+      buscarPokemon();
+    }
+
+    function navegarPokemon(delta) {
+      if (!pokemonAtualId) return;
+      const novoId = pokemonAtualId + delta;
+      if (novoId >= 1 && novoId <= MAX_POKEMON_ID) {
+        document.getElementById('inputPokemon').value = novoId;
+        buscarPokemon();
+      }
+    }
+
+    function atualizarBotoesNavegacao() {
+      const btnAnt = document.getElementById('btnAnterior');
+      const btnProx = document.getElementById('btnProximo');
+
+      if (!pokemonAtualId) {
+        btnAnt.disabled = true;
+        btnProx.disabled = true;
+        return;
+      }
+
+      btnAnt.disabled = pokemonAtualId <= 1;
+      btnProx.disabled = pokemonAtualId >= MAX_POKEMON_ID;
+    }
+
+    // Função assíncrona principal para consumir a PokéAPI
+    async function buscarPokemon() {
+      const inputEl = document.getElementById('inputPokemon');
+      const termo = inputEl.value.trim().toLowerCase();
+
+      const estadoInicial = document.getElementById('estadoInicial');
+      const card = document.getElementById('cardPokemon');
+      const msgBox = document.getElementById('mensagemStatus');
+      const textoStatus = document.getElementById('textoStatus');
+      const spinner = document.getElementById('loadingSpinner');
+      const lens = document.getElementById('cameraLens');
+
+      if (termo === '') {
+        alert('Por favor, digite o nome ou o número de um Pokémon!');
+        inputEl.focus();
+        return;
+      }
+
+      // Exibe estado de carregamento
+      estadoInicial.classList.add('oculto');
+      card.classList.add('oculto');
+      msgBox.classList.remove('oculto', 'erro');
+      spinner.classList.remove('oculto');
+      textoStatus.innerText = 'Buscando dados na PokéAPI...';
+      lens.classList.add('pulse');
+
+      try {
+        const resposta = await fetch(`https://pokeapi.co/api/v2/pokemon/${encodeURIComponent(termo)}`);
+
+        if (!resposta.ok) {
+          throw new Error('Pokémon não encontrado!');
+        }
+
+        const dados = await resposta.json();
+        pokemonAtualId = dados.id;
+
+        // Aplica tema de cor baseado no tipo principal
+        const tipoPrincipalKey = dados.types[0].type.name;
+        const configTema = TIPOS_CONFIG[tipoPrincipalKey] || { nome: tipoPrincipalKey, cor: '#3b82f6', suave: '#eff6ff' };
+        document.documentElement.style.setProperty('--accent-type', configTema.cor);
+        document.documentElement.style.setProperty('--accent-type-soft', configTema.suave);
+
+        // Preenche número formatado (#001) e nome
+        const numeroFormatado = '#' + String(dados.id).padStart(3, '0');
+        document.getElementById('numeroPokemon').innerText = numeroFormatado;
+        document.getElementById('nomePokemon').innerText = dados.name.replace(/-/g, ' ');
+
+        // Preenche badges de todos os tipos
+        const tiposContainer = document.getElementById('tiposContainer');
+        tiposContainer.innerHTML = '';
+        dados.types.forEach(item => {
+          const key = item.type.name;
+          const infoTipo = TIPOS_CONFIG[key];
+          const pill = document.createElement('span');
+          pill.className = 'type-pill';
+          pill.innerText = infoTipo ? infoTipo.nome : key.toUpperCase();
+          tiposContainer.appendChild(pill);
+        });
+
+        // Preenche peso (hectogramas -> kg) e altura (decímetros -> m)
+        document.getElementById('pesoPokemon').innerText = (dados.weight / 10).toFixed(1);
+        document.getElementById('alturaPokemon').innerText = (dados.height / 10).toFixed(2);
+
+        // Imagem oficial com fallbacks automáticos
+        const imgUrl =
+          dados.sprites.other?.['official-artwork']?.front_default ||
+          dados.sprites.other?.home?.front_default ||
+          dados.sprites.front_default ||
+          '';
+        const imgEl = document.getElementById('imagemPokemon');
+        imgEl.src = imgUrl;
+        imgEl.alt = `Imagem oficial de ${dados.name}`;
+
+        // Extrai e anima os status base
+        const getStat = (statName) => {
+          const found = dados.stats.find(s => s.stat.name === statName);
+          return found ? found.base_stat : 0;
+        };
+
+        const hp = getStat('hp');
+        const atk = getStat('attack');
+        const def = getStat('defense');
+        const spd = getStat('speed');
+
+        document.getElementById('statHpVal').innerText = hp;
+        document.getElementById('statAtkVal').innerText = atk;
+        document.getElementById('statDefVal').innerText = def;
+        document.getElementById('statSpdVal').innerText = spd;
+
+        // Mostra o cartão antes de animar as barras
+        msgBox.classList.add('oculto');
+        card.classList.remove('oculto');
+        atualizarBotoesNavegacao();
+
+        // Anima largura das barras (escala base até 200)
+        requestAnimationFrame(() => {
+          document.getElementById('statHpBar').style.width = `${Math.min((hp / 200) * 100, 100)}%`;
+          document.getElementById('statAtkBar').style.width = `${Math.min((atk / 200) * 100, 100)}%`;
+          document.getElementById('statDefBar').style.width = `${Math.min((def / 200) * 100, 100)}%`;
+          document.getElementById('statSpdBar').style.width = `${Math.min((spd / 200) * 100, 100)}%`;
+        });
+      } catch (erro) {
+        spinner.classList.add('oculto');
+        msgBox.classList.add('erro');
+        textoStatus.innerText = '❌ Ops! Pokémon não encontrado. Tente outro nome ou número.';
+        console.error(erro);
+      } finally {
+        lens.classList.remove('pulse');
+      }
+    }
+  </script>
+</body>
+</html>
